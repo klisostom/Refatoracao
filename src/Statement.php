@@ -54,19 +54,18 @@ class Statement
         $this->result = "\nStatement for ".$invoice['customer']."\n";
 
         foreach ($invoice['performances'] as $perf) {
-            $play = $playFor($perf);
-            $thisAmount = $this->amountFor($perf, $play);
+            $thisAmount = $this->amountFor($perf, $playFor($perf));
 
             // soma créditos por volume
             $this->volumeCredits += max($perf['audience'] - 30, 0);
             //soma um crédito extra para cada dez espectadores de comédia
-            if ('comedy' === $play['type']) {
+            if ('comedy' === $playFor($perf)['type']) {
                 $this->volumeCredits += floor($perf['audience'] / 5);
             }
 
             // exibe a linha para esta requisição
             $this->result .= "    " .
-                $play['name'].": " .
+                $playFor($perf)['name'].": " .
                 $this->numberFormatter->format($thisAmount / 100) .
                 " (" .
                 $perf['audience'] .
