@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Exception;
 use \NumberFormatter;
 
 class Statement
@@ -44,12 +45,16 @@ class Statement
         return $result;
     }
 
-    public function statement($invoice, array $plays): string
+    public function statement(array $invoice, array $plays): string
     {
+        $playFor = function ($aPerformance) use ($plays) {
+            return $plays[$aPerformance['playID']];
+        };
+
         $this->result = "\nStatement for ".$invoice['customer']."\n";
 
         foreach ($invoice['performances'] as $perf) {
-            $play = $plays[$perf['playID']];
+            $play = $playFor($perf);
             $thisAmount = $this->amountFor($perf, $play);
 
             // soma créditos por volume
