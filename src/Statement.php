@@ -52,15 +52,15 @@ class Statement
             return $result;
         };
 
-        $volumeCreditsFor = function ($perf) use ($playFor) {
-            $volumeCreditsTemp = 0;
-            $volumeCreditsTemp += max($perf['audience'] - 30, 0);
+        $volumeCreditsFor = function ($aPerformance) use ($playFor) {
+            $result = 0;
+            $result += max($aPerformance['audience'] - 30, 0);
 
-            if ('comedy' === $playFor($perf)['type']) {
-                $volumeCreditsTemp += floor($perf['audience'] / 5);
+            if ('comedy' === $playFor($aPerformance)['type']) {
+                $result += floor($aPerformance['audience'] / 5);
             }
 
-            return $volumeCreditsTemp;
+            return $result;
         };
 
         foreach ($invoice['performances'] as $perf) {
