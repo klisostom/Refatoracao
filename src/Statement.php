@@ -22,12 +22,13 @@ class Statement
 
     public function statement(array $invoice, array $plays): string
     {
+        $this->result = "\nStatement for ".$invoice['customer']."\n";
+
         $playFor = function ($aPerformance) use ($plays) {
             return $plays[$aPerformance['playID']];
         };
 
-        $amountFor = function ($aPerformance, $play) use ($playFor)
-        {
+        $amountFor = function ($aPerformance) use ($playFor) {
             $result = 0;
 
             switch ($playFor($aPerformance)['type']) {
@@ -51,27 +52,29 @@ class Statement
             return $result;
         };
 
-        $this->result = "\nStatement for ".$invoice['customer']."\n";
+        $volumeCreditsFor = function ($perf) use ($playFor) {
+            $volumeCreditsTemp = 0;
+            $volumeCreditsTemp += max($perf['audience'] - 30, 0);
+
+            if ('comedy' === $playFor($perf)['type']) {
+                $volumeCreditsTemp += floor($perf['audience'] / 5);
+            }
+
+            return $volumeCreditsTemp;
+        };
 
         foreach ($invoice['performances'] as $perf) {
-            $thisAmount = $amountFor($perf, $playFor($perf));
-
-            // soma créditos por volume
-            $this->volumeCredits += max($perf['audience'] - 30, 0);
-            //soma um crédito extra para cada dez espectadores de comédia
-            if ('comedy' === $playFor($perf)['type']) {
-                $this->volumeCredits += floor($perf['audience'] / 5);
-            }
+            $this->volumeCredits += $volumeCreditsFor($perf);
 
             // exibe a linha para esta requisição
             $this->result .= "    " .
                 $playFor($perf)['name'].": " .
-                $this->numberFormatter->format($thisAmount / 100) .
+                $this->numberFormatter->format($amountFor($perf) / 100) .
                 " (" .
                 $perf['audience'] .
                 " seats)\n";
 
-            $this->totalAmount += $thisAmount;
+            $this->totalAmount += $amountFor($perf);
         }
 
         $this->result .= "Amount owed is " . $this->numberFormatter->format(($this->totalAmount/100)) . "\n";
