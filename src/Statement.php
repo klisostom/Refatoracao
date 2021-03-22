@@ -9,26 +9,24 @@ class Statement
 {
 
     public function __construct(
-        public int $totalAmount = 0,
-        public string $result = '',
     ) {}
-
-    protected function usd($aNumber)
-    {
-        $result = new NumberFormatter(
-            'en_US',
-            NumberFormatter::CURRENCY,
-        );
-
-        return $result->format($aNumber / 100);
-    }
 
     public function statement(array $invoice, array $plays): string
     {
-        $this->result = "\nStatement for ".$invoice['customer']."\n";
+        $result = "\nStatement for ".$invoice['customer']."\n";
 
         $playFor = function ($aPerformance) use ($plays) {
             return $plays[$aPerformance['playID']];
+        };
+
+        $usd = function ($aNumber)
+        {
+            $result = new NumberFormatter(
+                'en_US',
+                NumberFormatter::CURRENCY,
+            );
+
+            return $result->format($aNumber / 100);
         };
 
         $amountFor = function ($aPerformance) use ($playFor) {
@@ -67,27 +65,36 @@ class Statement
         };
 
         $totalVolumeCredits = function () use ($invoice, $volumeCreditsFor) {
-            $volumeCredits = 0;
+            $result = 0;
 
             foreach ($invoice['performances'] as $perf) {
-                $volumeCredits += $volumeCreditsFor($perf);
+                $result += $volumeCreditsFor($perf);
             }
 
-            return $volumeCredits;
+            return $result;
+        };
+
+        $totalAmount = function () use ($invoice, $amountFor) {
+            $result = 0;
+
+            foreach ($invoice['performances'] as $perf) {
+                $result += $amountFor($perf);
+            }
+
+            return $result;
         };
 
         foreach ($invoice['performances'] as $perf) {
             // exibe a linha para esta requisição
-            $this->result .= "    " .
+            $result .= "    " .
                 $playFor($perf)['name'].": " .
-                $this->usd($amountFor($perf)) .
+                $usd($amountFor($perf)) .
                 " (" . $perf['audience'] . " seats)\n";
 
-            $this->totalAmount += $amountFor($perf);
         }
 
-        $this->result .= "Amount owed is " . $this->usd($this->totalAmount) . "\n";
-        $this->result .= "You earned " . $totalVolumeCredits() . " credits\n";
-        return $this->result;
+        $result .= "Amount owed is " . $usd($totalAmount()) . "\n";
+        $result .= "You earned " . $totalVolumeCredits() . " credits\n";
+        return $result;
     }
 }
