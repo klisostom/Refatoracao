@@ -2,91 +2,23 @@
 
 namespace App;
 
-use Exception;
 use \NumberFormatter;
+use App\CreateStatementData;
+
+require __DIR__ . '/../src/CreateStatementData.php';
 
 class Statement
 {
+    protected CreateStatementData $statementData;
 
     public function __construct()
     {
-        //
+        $this->statementData = new CreateStatementData();
     }
 
     public function statement(array $invoice, array $plays)
     {
-        return $this->renderPlainText($this->createStatementData($invoice, $plays));
-    }
-
-    public function createStatementData(array $invoice, array $plays): array
-    {
-        $playFor = function ($aPerformance) use ($plays) {
-            return $plays[$aPerformance['playID']];
-        };
-
-        $amountFor = function ($aPerformance) {
-            $result = 0;
-
-            switch ($aPerformance['play']['type']) {
-                case 'tragedy':
-                    $result = 40000;
-                    if ($aPerformance['audience'] > 30) {
-                        $result += 1000 * ($aPerformance['audience'] - 30);
-                    }
-                    break;
-                case 'comedy':
-                    $result = 30000;
-                    if ($aPerformance['audience'] > 20) {
-                        $result += 10000 + 500 * ($aPerformance['audience'] - 20);
-                    }
-                    $result += 300 * $aPerformance['audience'];
-                    break;
-                default:
-                    throw new Exception('Unknow type: ' . $aPerformance['play']['type'], 1);
-            };
-
-            return $result;
-        };
-
-        $volumeCreditsFor = function ($aPerformance) {
-            $result = 0;
-            $result += max($aPerformance['audience'] - 30, 0);
-
-            if ('comedy' === $aPerformance['play']['type']) {
-                $result += floor($aPerformance['audience'] / 5);
-            }
-
-            return $result;
-        };
-
-        $enrichPerformance = function ($aPerformance) use (
-            $playFor,
-            $amountFor,
-            $volumeCreditsFor,
-        ) {
-            $result = $aPerformance;
-            $result['play'] = $playFor($result);
-            $result['amount'] = $amountFor($result);
-            $result['volumeCredits'] = $volumeCreditsFor($result);
-
-            return $result;
-        };
-
-        $totalVolumeCredits = function ($data) {
-            return array_reduce($data['performances'], fn ($total, $perf) => $total + $perf['volumeCredits'], 0);
-        };
-
-        $totalAmount = function ($data) {
-            return array_reduce($data['performances'], fn ($total, $perf) => $total + $perf['amount'], 0);
-        };
-
-        $statementData = [];
-        $statementData['customer'] = $invoice['customer'];
-        $statementData['performances'] = array_map($enrichPerformance, $invoice['performances']);
-        $statementData['totalAmount'] = $totalAmount($statementData);
-        $statementData['totalVolumeCredits'] = $totalVolumeCredits($statementData);
-
-        return $statementData;
+        return $this->renderPlainText($this->statementData->createStatementData($invoice, $plays));
     }
 
     public function renderPlainText(array $data): string
