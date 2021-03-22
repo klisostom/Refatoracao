@@ -7,8 +7,8 @@ use Exception;
 class PerformanceCalculator
 {
     public function __construct(
-        public $aPerformance,
-        public $aPlay,
+        protected $aPerformance,
+        protected $aPlay,
     ) {
         # code...
     }
@@ -39,6 +39,18 @@ class PerformanceCalculator
             default:
                 throw new Exception('Unknow type: ' . $this->aPlay['type'], 1);
         };
+
+        return $result;
+    }
+
+    public function getVolumeCredits()
+    {
+        $result = 0;
+        $result += max($this->aPerformance['audience'] - 30, 0);
+
+        if ('comedy' === $this->aPlay['type']) {
+            $result += floor($this->aPerformance['audience'] / 5);
+        }
 
         return $result;
     }
