@@ -19,31 +19,6 @@ class Statement
             return $plays[$aPerformance['playID']];
         };
 
-        $enrichPerformance = function ($aPerformance) use ($playFor) {
-            $result = $aPerformance;
-            $result['play'] = $playFor($result);
-
-            return $result;
-        };
-
-        $statement = [];
-        $statement['customer'] = $invoice['customer'];
-        $statement['performances'] = array_map($enrichPerformance, $invoice['performances']);
-
-        return $this->renderPlainText($statement, $plays);
-    }
-
-    public function renderPlainText(array $data): string
-    {
-        $usd = function ($aNumber) {
-            $result = new NumberFormatter(
-                'en_US',
-                NumberFormatter::CURRENCY,
-            );
-
-            return $result->format($aNumber / 100);
-        };
-
         $amountFor = function ($aPerformance) {
             $result = 0;
 
@@ -68,6 +43,35 @@ class Statement
             return $result;
         };
 
+        $enrichPerformance = function ($aPerformance) use (
+            $playFor,
+            $amountFor
+        ) {
+            $result = $aPerformance;
+            $result['play'] = $playFor($result);
+            $result['amount'] = $amountFor($result);
+
+            return $result;
+        };
+
+        $statement = [];
+        $statement['customer'] = $invoice['customer'];
+        $statement['performances'] = array_map($enrichPerformance, $invoice['performances']);
+
+        return $this->renderPlainText($statement, $plays);
+    }
+
+    public function renderPlainText(array $data): string
+    {
+        $usd = function ($aNumber) {
+            $result = new NumberFormatter(
+                'en_US',
+                NumberFormatter::CURRENCY,
+            );
+
+            return $result->format($aNumber / 100);
+        };
+
         $volumeCreditsFor = function ($aPerformance) {
             $result = 0;
             $result += max($aPerformance['audience'] - 30, 0);
@@ -89,11 +93,11 @@ class Statement
             return $result;
         };
 
-        $totalAmount = function () use ($data, $amountFor) {
+        $totalAmount = function () use ($data) {
             $result = 0;
 
             foreach ($data['performances'] as $perf) {
-                $result += $amountFor($perf);
+                $result += $perf['amount'];
             }
 
             return $result;
@@ -105,7 +109,7 @@ class Statement
             // exibe a linha para esta requisição
             $result .= "    " .
                 $perf['play']['name'].": " .
-                $usd($amountFor($perf)) .
+                $usd($perf['amount']) .
                 " (" . $perf['audience'] . " seats)\n";
         }
 
