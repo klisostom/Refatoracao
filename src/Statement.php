@@ -15,8 +15,15 @@ class Statement
 
     public function statement(array $invoice, array $plays): string
     {
-        $enrichPerformance = function ($aPerformance) {
-            return $aPerformance;
+        $playFor = function ($aPerformance) use ($plays) {
+            return $plays[$aPerformance['playID']];
+        };
+
+        $enrichPerformance = function ($aPerformance) use ($playFor) {
+            $result = $aPerformance;
+            $result['play'] = $playFor($result);
+
+            return $result;
         };
 
         $statement = [];
@@ -26,14 +33,8 @@ class Statement
         return $this->renderPlainText($statement, $plays);
     }
 
-    public function renderPlainText(
-        array $data,
-        array $plays
-    ): string {
-        $playFor = function ($aPerformance) use ($plays) {
-            return $plays[$aPerformance['playID']];
-        };
-
+    public function renderPlainText(array $data): string
+    {
         $usd = function ($aNumber) {
             $result = new NumberFormatter(
                 'en_US',
@@ -43,10 +44,10 @@ class Statement
             return $result->format($aNumber / 100);
         };
 
-        $amountFor = function ($aPerformance) use ($playFor) {
+        $amountFor = function ($aPerformance) {
             $result = 0;
 
-            switch ($playFor($aPerformance)['type']) {
+            switch ($aPerformance['play']['type']) {
                 case 'tragedy':
                     $result = 40000;
                     if ($aPerformance['audience'] > 30) {
@@ -61,17 +62,17 @@ class Statement
                     $result += 300 * $aPerformance['audience'];
                     break;
                 default:
-                    throw new Exception('Unknow type: ' . $playFor($aPerformance)['type'], 1);
+                    throw new Exception('Unknow type: ' . $aPerformance['play']['type'], 1);
             };
 
             return $result;
         };
 
-        $volumeCreditsFor = function ($aPerformance) use ($playFor) {
+        $volumeCreditsFor = function ($aPerformance) {
             $result = 0;
             $result += max($aPerformance['audience'] - 30, 0);
 
-            if ('comedy' === $playFor($aPerformance)['type']) {
+            if ('comedy' === $aPerformance['play']['type']) {
                 $result += floor($aPerformance['audience'] / 5);
             }
 
@@ -103,7 +104,7 @@ class Statement
         foreach ($data['performances'] as $perf) {
             // exibe a linha para esta requisição
             $result .= "    " .
-                $playFor($perf)['name'].": " .
+                $perf['play']['name'].": " .
                 $usd($amountFor($perf)) .
                 " (" . $perf['audience'] . " seats)\n";
         }
