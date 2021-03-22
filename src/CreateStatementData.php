@@ -3,6 +3,9 @@
 namespace App;
 
 use Exception;
+use App\Calculator\PerformanceCalculator;
+
+require __DIR__ . '/../src/Calculator/PerformanceCalculator.php';
 
 class CreateStatementData
 {
@@ -52,8 +55,10 @@ class CreateStatementData
             $amountFor,
             $volumeCreditsFor,
         ) {
+            $calculator = new PerformanceCalculator($aPerformance, $playFor($aPerformance));
+
             $result = $aPerformance;
-            $result['play'] = $playFor($result);
+            $result['play'] = $calculator->getPlay();
             $result['amount'] = $amountFor($result);
             $result['volumeCredits'] = $volumeCreditsFor($result);
 
