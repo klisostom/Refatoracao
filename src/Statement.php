@@ -3,7 +3,6 @@
 namespace App;
 
 use \NumberFormatter;
-use App\CreateStatementData;
 
 require __DIR__ . '/../src/CreateStatementData.php';
 
