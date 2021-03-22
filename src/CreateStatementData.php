@@ -15,28 +15,9 @@ class CreateStatementData
             return $plays[$aPerformance['playID']];
         };
 
-        $amountFor = function ($aPerformance) {
-            $result = 0;
-
-            switch ($aPerformance['play']['type']) {
-                case 'tragedy':
-                    $result = 40000;
-                    if ($aPerformance['audience'] > 30) {
-                        $result += 1000 * ($aPerformance['audience'] - 30);
-                    }
-                    break;
-                case 'comedy':
-                    $result = 30000;
-                    if ($aPerformance['audience'] > 20) {
-                        $result += 10000 + 500 * ($aPerformance['audience'] - 20);
-                    }
-                    $result += 300 * $aPerformance['audience'];
-                    break;
-                default:
-                    throw new Exception('Unknow type: ' . $aPerformance['play']['type'], 1);
-            };
-
-            return $result;
+        $amountFor = function ($aPerformance) use ($playFor) {
+            $result = new PerformanceCalculator($aPerformance, $playFor($aPerformance));
+            return $result->getAmount();
         };
 
         $volumeCreditsFor = function ($aPerformance) {
