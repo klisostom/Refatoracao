@@ -13,7 +13,12 @@ class Statement
         //
     }
 
-    public function statement(array $invoice, array $plays): string
+    public function statement(array $invoice, array $plays)
+    {
+        return $this->renderPlainText($this->createStatementData($invoice, $plays));
+    }
+
+    public function createStatementData(array $invoice, array $plays): array
     {
         $playFor = function ($aPerformance) use ($plays) {
             return $plays[$aPerformance['playID']];
@@ -81,7 +86,7 @@ class Statement
         $statementData['totalAmount'] = $totalAmount($statementData);
         $statementData['totalVolumeCredits'] = $totalVolumeCredits($statementData);
 
-        return $this->renderPlainText($statementData, $plays);
+        return $statementData;
     }
 
     public function renderPlainText(array $data): string
