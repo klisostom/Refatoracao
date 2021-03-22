@@ -43,13 +43,26 @@ class Statement
             return $result;
         };
 
+        $volumeCreditsFor = function ($aPerformance) {
+            $result = 0;
+            $result += max($aPerformance['audience'] - 30, 0);
+
+            if ('comedy' === $aPerformance['play']['type']) {
+                $result += floor($aPerformance['audience'] / 5);
+            }
+
+            return $result;
+        };
+
         $enrichPerformance = function ($aPerformance) use (
             $playFor,
-            $amountFor
+            $amountFor,
+            $volumeCreditsFor,
         ) {
             $result = $aPerformance;
             $result['play'] = $playFor($result);
             $result['amount'] = $amountFor($result);
+            $result['volumeCredits'] = $volumeCreditsFor($result);
 
             return $result;
         };
@@ -72,22 +85,11 @@ class Statement
             return $result->format($aNumber / 100);
         };
 
-        $volumeCreditsFor = function ($aPerformance) {
-            $result = 0;
-            $result += max($aPerformance['audience'] - 30, 0);
-
-            if ('comedy' === $aPerformance['play']['type']) {
-                $result += floor($aPerformance['audience'] / 5);
-            }
-
-            return $result;
-        };
-
-        $totalVolumeCredits = function () use ($data, $volumeCreditsFor) {
+        $totalVolumeCredits = function () use ($data) {
             $result = 0;
 
             foreach ($data['performances'] as $perf) {
-                $result += $volumeCreditsFor($perf);
+                $result += $perf['volumeCredits'];
             }
 
             return $result;
