@@ -15,9 +15,13 @@ class Statement
 
     public function statement(array $invoice, array $plays): string
     {
+        $enrichPerformance = function ($aPerformance) {
+            return $aPerformance;
+        };
+
         $statement = [];
         $statement['customer'] = $invoice['customer'];
-        $statement['performances'] = $invoice['performances'];
+        $statement['performances'] = array_map($enrichPerformance, $invoice['performances']);
 
         return $this->renderPlainText($statement, $plays);
     }
