@@ -68,23 +68,11 @@ class Statement
         };
 
         $totalVolumeCredits = function ($data) {
-            $result = 0;
-
-            foreach ($data['performances'] as $perf) {
-                $result += $perf['volumeCredits'];
-            }
-
-            return $result;
+            return array_reduce($data['performances'], fn ($total, $perf) => $total + $perf['volumeCredits'], 0);
         };
 
         $totalAmount = function ($data) {
-            $result = 0;
-
-            foreach ($data['performances'] as $perf) {
-                $result += $perf['amount'];
-            }
-
-            return $result;
+            return array_reduce($data['performances'], fn ($total, $perf) => $total + $perf['amount'], 0);
         };
 
         $statementData = [];
