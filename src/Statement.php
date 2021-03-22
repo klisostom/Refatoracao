@@ -8,19 +8,23 @@ use \NumberFormatter;
 class Statement
 {
 
-    public function __construct(
-    ) {}
+    public function __construct()
+    {
+        //
+    }
 
     public function statement(array $invoice, array $plays): string
     {
-        $result = "\nStatement for ".$invoice['customer']."\n";
+        return $this->renderPlainText($invoice, $plays);
+    }
 
+    public function renderPlainText(array $invoice, array $plays): string
+    {
         $playFor = function ($aPerformance) use ($plays) {
             return $plays[$aPerformance['playID']];
         };
 
-        $usd = function ($aNumber)
-        {
+        $usd = function ($aNumber) {
             $result = new NumberFormatter(
                 'en_US',
                 NumberFormatter::CURRENCY,
@@ -84,13 +88,14 @@ class Statement
             return $result;
         };
 
+        $result = "\nStatement for ".$invoice['customer']."\n";
+
         foreach ($invoice['performances'] as $perf) {
             // exibe a linha para esta requisição
             $result .= "    " .
                 $playFor($perf)['name'].": " .
                 $usd($amountFor($perf)) .
                 " (" . $perf['audience'] . " seats)\n";
-
         }
 
         $result .= "Amount owed is " . $usd($totalAmount()) . "\n";
