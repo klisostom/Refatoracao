@@ -15,11 +15,17 @@ class Statement
 
     public function statement(array $invoice, array $plays): string
     {
-        return $this->renderPlainText($invoice, $plays);
+        $statement = [];
+        $statement['customer'] = $invoice['customer'];
+        $statement['performances'] = $invoice['performances'];
+
+        return $this->renderPlainText($statement, $plays);
     }
 
-    public function renderPlainText(array $invoice, array $plays): string
-    {
+    public function renderPlainText(
+        array $data,
+        array $plays
+    ): string {
         $playFor = function ($aPerformance) use ($plays) {
             return $plays[$aPerformance['playID']];
         };
@@ -68,29 +74,29 @@ class Statement
             return $result;
         };
 
-        $totalVolumeCredits = function () use ($invoice, $volumeCreditsFor) {
+        $totalVolumeCredits = function () use ($data, $volumeCreditsFor) {
             $result = 0;
 
-            foreach ($invoice['performances'] as $perf) {
+            foreach ($data['performances'] as $perf) {
                 $result += $volumeCreditsFor($perf);
             }
 
             return $result;
         };
 
-        $totalAmount = function () use ($invoice, $amountFor) {
+        $totalAmount = function () use ($data, $amountFor) {
             $result = 0;
 
-            foreach ($invoice['performances'] as $perf) {
+            foreach ($data['performances'] as $perf) {
                 $result += $amountFor($perf);
             }
 
             return $result;
         };
 
-        $result = "\nStatement for ".$invoice['customer']."\n";
+        $result = "\nStatement for ".$data['customer']."\n";
 
-        foreach ($invoice['performances'] as $perf) {
+        foreach ($data['performances'] as $perf) {
             // exibe a linha para esta requisição
             $result .= "    " .
                 $playFor($perf)['name'].": " .
