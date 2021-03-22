@@ -67,11 +67,33 @@ class Statement
             return $result;
         };
 
-        $statement = [];
-        $statement['customer'] = $invoice['customer'];
-        $statement['performances'] = array_map($enrichPerformance, $invoice['performances']);
+        $totalVolumeCredits = function ($data) {
+            $result = 0;
 
-        return $this->renderPlainText($statement, $plays);
+            foreach ($data['performances'] as $perf) {
+                $result += $perf['volumeCredits'];
+            }
+
+            return $result;
+        };
+
+        $totalAmount = function ($data) {
+            $result = 0;
+
+            foreach ($data['performances'] as $perf) {
+                $result += $perf['amount'];
+            }
+
+            return $result;
+        };
+
+        $statementData = [];
+        $statementData['customer'] = $invoice['customer'];
+        $statementData['performances'] = array_map($enrichPerformance, $invoice['performances']);
+        $statementData['totalAmount'] = $totalAmount($statementData);
+        $statementData['totalVolumeCredits'] = $totalVolumeCredits($statementData);
+
+        return $this->renderPlainText($statementData, $plays);
     }
 
     public function renderPlainText(array $data): string
@@ -85,26 +107,6 @@ class Statement
             return $result->format($aNumber / 100);
         };
 
-        $totalVolumeCredits = function () use ($data) {
-            $result = 0;
-
-            foreach ($data['performances'] as $perf) {
-                $result += $perf['volumeCredits'];
-            }
-
-            return $result;
-        };
-
-        $totalAmount = function () use ($data) {
-            $result = 0;
-
-            foreach ($data['performances'] as $perf) {
-                $result += $perf['amount'];
-            }
-
-            return $result;
-        };
-
         $result = "\nStatement for ".$data['customer']."\n";
 
         foreach ($data['performances'] as $perf) {
@@ -115,8 +117,8 @@ class Statement
                 " (" . $perf['audience'] . " seats)\n";
         }
 
-        $result .= "Amount owed is " . $usd($totalAmount()) . "\n";
-        $result .= "You earned " . $totalVolumeCredits() . " credits\n";
+        $result .= "Amount owed is " . $usd($data['totalAmount']) . "\n";
+        $result .= "You earned " . $data['totalVolumeCredits'] . " credits\n";
         return $result;
     }
 }
