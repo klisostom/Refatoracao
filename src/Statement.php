@@ -9,15 +9,19 @@ class Statement
 {
 
     public function __construct(
-        private $numberFormatter = null,
         public int $totalAmount = 0,
         public int $volumeCredits = 0,
         public string $result = '',
-    ) {
-        $this->numberFormatter = new NumberFormatter(
+    ) {}
+
+    protected function format($aNumber)
+    {
+        $result = new NumberFormatter(
             'en_US',
             NumberFormatter::CURRENCY,
         );
+
+        return $result->format($aNumber);
     }
 
     public function statement(array $invoice, array $plays): string
@@ -69,15 +73,13 @@ class Statement
             // exibe a linha para esta requisição
             $this->result .= "    " .
                 $playFor($perf)['name'].": " .
-                $this->numberFormatter->format($amountFor($perf) / 100) .
-                " (" .
-                $perf['audience'] .
-                " seats)\n";
+                $this->format($amountFor($perf) / 100) .
+                " (" . $perf['audience'] . " seats)\n";
 
             $this->totalAmount += $amountFor($perf);
         }
 
-        $this->result .= "Amount owed is " . $this->numberFormatter->format(($this->totalAmount/100)) . "\n";
+        $this->result .= "Amount owed is " . $this->format(($this->totalAmount/100)) . "\n";
         $this->result .= "You earned " . $this->volumeCredits . " credits\n";
         return $this->result;
     }
