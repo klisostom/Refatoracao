@@ -10,18 +10,17 @@ class Statement
 
     public function __construct(
         public int $totalAmount = 0,
-        public int $volumeCredits = 0,
         public string $result = '',
     ) {}
 
-    protected function format($aNumber)
+    protected function usd($aNumber)
     {
         $result = new NumberFormatter(
             'en_US',
             NumberFormatter::CURRENCY,
         );
 
-        return $result->format($aNumber);
+        return $result->format($aNumber / 100);
     }
 
     public function statement(array $invoice, array $plays): string
@@ -67,20 +66,28 @@ class Statement
             return $result;
         };
 
-        foreach ($invoice['performances'] as $perf) {
-            $this->volumeCredits += $volumeCreditsFor($perf);
+        $totalVolumeCredits = function () use ($invoice, $volumeCreditsFor) {
+            $volumeCredits = 0;
 
+            foreach ($invoice['performances'] as $perf) {
+                $volumeCredits += $volumeCreditsFor($perf);
+            }
+
+            return $volumeCredits;
+        };
+
+        foreach ($invoice['performances'] as $perf) {
             // exibe a linha para esta requisição
             $this->result .= "    " .
                 $playFor($perf)['name'].": " .
-                $this->format($amountFor($perf) / 100) .
+                $this->usd($amountFor($perf)) .
                 " (" . $perf['audience'] . " seats)\n";
 
             $this->totalAmount += $amountFor($perf);
         }
 
-        $this->result .= "Amount owed is " . $this->format(($this->totalAmount/100)) . "\n";
-        $this->result .= "You earned " . $this->volumeCredits . " credits\n";
+        $this->result .= "Amount owed is " . $this->usd($this->totalAmount) . "\n";
+        $this->result .= "You earned " . $totalVolumeCredits() . " credits\n";
         return $this->result;
     }
 }
